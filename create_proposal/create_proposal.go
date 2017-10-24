@@ -140,36 +140,7 @@ func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, a
 		return nil, err
 	}
 	
-	/*
-	//get the Form index
-	Tier3FormIndexAsBytes, err := stub.GetState(Tier3FormIndexStr)
-	if err != nil {
-		return nil, errors.New("Failed to get Tier-2 Form index")
-	}
-	var Tier3FormIndex []string
-	fmt.Print("Tier3FormIndexAsBytes: ")
-	fmt.Println(Tier3FormIndexAsBytes)
-	
-	json.Unmarshal(Tier3FormIndexAsBytes, &Tier3FormIndex)							//un stringify it aka JSON.parse()
-	fmt.Print("Tier3FormIndex after unmarshal..before append: ")
-	fmt.Println(Tier3FormIndex)
-	//append
-	Tier3FormIndex = append(Tier3FormIndex, FAA_formNumber)									//add Form transID to index list
-	fmt.Println("! Tier-3 Form index after appending FAA_formNumber: ", Tier3FormIndex)
-	jsonAsBytes, _ := json.Marshal(Tier3FormIndex)
-	fmt.Print("jsonAsBytes: ")
-	fmt.Println(jsonAsBytes)
-	err = stub.PutState(Tier3FormIndexStr, jsonAsBytes)						//store name of Form
-	if err != nil {
-		return nil, err
-	}
 
-	fmt.Println("Tier-3 Form created successfully.")
-	return nil, nil
-	*/
-	
-	
-	
 	
 	proposal_id_FormIndexAsBytes, err := stub.GetState(approved_proposal_entry)
 	if err != nil {
@@ -195,12 +166,6 @@ func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, a
 
 	fmt.Println("Proposal Form created successfully.")
 	return nil, nil
-	
-	
-	
-	
-	
-	
 	
 	
 }
