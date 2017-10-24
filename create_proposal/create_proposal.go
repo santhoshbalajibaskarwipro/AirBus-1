@@ -26,11 +26,11 @@ import (
 "encoding/json"
 
 "github.com/hyperledger/fabric/core/chaincode/shim"
-"github.com/hyperledger/fabric/core/util"
+//"github.com/hyperledger/fabric/core/util"
 )
 
 // Proposal example simple Chaincode implementation
-type manage_proposal struct {
+type ManageProposal struct {
 }
 
 var approved_proposal_entry = "approved_proposal_entry"				//name for the key/value that will store a list of all known  Tier3 Form
@@ -46,7 +46,7 @@ type proposal struct{
 // Main - start the chaincode for Form management
 // ============================================================================================================================
 func main() {			
-	err := shim.Start(new(manage_proposal))
+	err := shim.Start(new(ManageProposal))
 	if err != nil {
 		fmt.Printf("Error starting Form management chaincode: %s", err)
 	}
@@ -54,7 +54,7 @@ func main() {
 // ============================================================================================================================
 // Init - reset all the things
 // ============================================================================================================================
-func (t *manage_proposal) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageProposal) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	var msg string
 	var err error
 	if len(args) != 1 {
@@ -62,7 +62,7 @@ func (t *manage_proposal) Init(stub shim.ChaincodeStubInterface, function string
 	}
 	// Initialize the chaincode
 	msg = args[0]
-	fmt.Println("manage_proposal chaincode is deployed successfully.");
+	fmt.Println("ManageProposal chaincode is deployed successfully.");
 	
 	// Write the state to the ledger
 	err = stub.PutState("abc", []byte(msg))	//making a test var "abc", I find it handy to read/write to it right away to test the network
@@ -80,14 +80,14 @@ func (t *manage_proposal) Init(stub shim.ChaincodeStubInterface, function string
 // ============================================================================================================================
 // Run - Our entry Formint for Invocations - [LEGACY] obc-peer 4/25/2016
 // ============================================================================================================================
-func (t *manage_proposal) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageProposal) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("run is running " + function)
 	return t.Invoke(stub, function, args)
 }
 // ============================================================================================================================
 // Invoke - Our entry Formint for Invocations
 // ============================================================================================================================
-func (t *manage_proposal) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *ManageProposal) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
@@ -100,10 +100,28 @@ func (t *manage_proposal) Invoke(stub shim.ChaincodeStubInterface, function stri
 	jsonResp := "Error : Received unknown function invocation: "+ function 				//error
 	return nil, errors.New(jsonResp)
 }
+
+// ============================================================================================================================
+// Query - Our entry Formint for Queries
+// ============================================================================================================================
+func (t *ManageProposal) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+	fmt.Println("Query is running " + function)
+
+	// Handle different functions
+	if function == "get_all_proposal" {													//Read all Forms
+		return t.get_all_proposal(stub, args)
+	} 
+
+	fmt.Println("query did not find func: " + function)				//error
+	jsonResp := "Error : Received unknown function query: "+ function 
+	return nil, errors.New(jsonResp)
+}
+
+
 // ============================================================================================================================
 // create Form - create a new Form for proposal id, store into chaincode state
 // ============================================================================================================================
-func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *ManageProposal) create_proposal_id(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	if len(args) != 3 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 9")
@@ -146,7 +164,7 @@ func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, a
 	if err != nil {
 		return nil, errors.New("Failed to get proposal id  Form index")
 	}
-	var proposal_id_Index []string
+	var proposal_id_FormIndex []string
 	fmt.Print("proposal_id_FormIndexAsBytes: ")
 	fmt.Println(proposal_id_FormIndexAsBytes)
 	
@@ -168,4 +186,50 @@ func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, a
 	return nil, nil
 	
 	
+}
+
+
+
+func (t *ManageProposal) get_all_proposal(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	
+	var jsonProposalResp,errResp string
+	var proposal_id_FormIndex []string
+	fmt.Println("Fetching All Proposals")
+	var err error
+	if len(args) != 1 {
+		return nil, errors.New("Incorrect number of arguments. Expecting single space as an argument")
+	}
+	// fetching all tier-3 forms
+	proposal_id_FormIndexAsBytes, err := stub.GetState(approved_proposal_entry)
+	if err != nil {
+		return nil, errors.New("Failed to get all Proposals")
+	}
+	fmt.Print("proposal_id_FormIndexAsBytes : ")
+	fmt.Println(proposal_id_FormIndexAsBytes)
+	json.Unmarshal(proposal_id_FormIndexAsBytes, &proposal_id_FormIndex)								//un stringify it aka JSON.parse()
+	fmt.Print("proposal_id_FormIndex : ")
+	fmt.Println(proposal_id_FormIndex)
+	// Proposal data
+	jsonProposalResp = "{"
+	for i,val := range proposal_id_FormIndex{
+		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Proposal")
+		valueAsBytes, err := stub.GetState(val)
+		if err != nil {
+			errResp = "{\"Error\":\"Failed to get state for " + val + "\"}"
+			return nil, errors.New(errResp)
+		}
+		fmt.Print("valueAsBytes : ")
+		fmt.Println(valueAsBytes)
+		jsonProposalResp = jsonProposalResp + "\""+ val + "\":" + string(valueAsBytes[:])
+		if i < len(proposal_id_FormIndex)-1 {
+			jsonProposalResp = jsonProposalResp + ","
+		}
+	}
+	fmt.Println("len(proposal_id_FormIndex) : ")
+	fmt.Println(len(proposal_id_FormIndex))
+
+	jsonProposalResp = jsonProposalResp + "}"
+	fmt.Println([]byte(jsonProposalResp))
+	fmt.Println("Fetched All Tier-3 Forms successfully.")
+	return []byte(jsonProposalResp), nil
 }
