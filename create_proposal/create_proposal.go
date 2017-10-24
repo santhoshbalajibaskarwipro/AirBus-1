@@ -7,7 +7,7 @@ to you under the Apache License, Version 2.0 (the
 "License"); you may not use this file except in compliance
 with the License.  You may obtain a copy of the License at
 
-  http://www.apache.org/licenses/LICENSE-2.0
+  http://www.apache.org/licenses/LICENSE-2.0 
 
 Unless required by applicable law or agreed to in writing,
 software distributed under the License is distributed on an
@@ -101,14 +101,14 @@ func (t *manage_proposal) Invoke(stub shim.ChaincodeStubInterface, function stri
 	return nil, errors.New(jsonResp)
 }
 // ============================================================================================================================
-// create Form - create a new Form for Tier-3, store into chaincode state
+// create Form - create a new Form for proposal id, store into chaincode state
 // ============================================================================================================================
-func (t *manage_proposal) createForm_Tier3(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *manage_proposal) create_proposal_id(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-	if len(args) != 10 {
+	if len(args) != 3 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 9")
 	}
-	fmt.Println("Creating a new Form for Tier-3")
+	fmt.Println("Creating a new Form for proposal id ")
 	if len(args[0]) <= 0 {
 		return nil, errors.New("1st argument must be a non-empty string")
 	}
@@ -118,73 +118,29 @@ func (t *manage_proposal) createForm_Tier3(stub shim.ChaincodeStubInterface, arg
 	if len(args[2]) <= 0 {
 		return nil, errors.New("3rd argument must be a non-empty string")
 	}
-	if len(args[3]) <= 0 {
-		return nil, errors.New("4th argument must be a non-empty string")
-	}
-	if len(args[4]) <= 0 {
-		return nil, errors.New("5th argument must be a non-empty string")
-	}
-	if len(args[5]) <= 0 {
-		return nil, errors.New("6th argument must be a non-empty string")
-	}
-	if len(args[6]) <= 0 {
-		return nil, errors.New("7th argument must be a non-empty string")
-	}
-	if len(args[7]) <= 0 {
-		return nil, errors.New("8th argument must be a non-empty string")
-	}
-	if len(args[8]) <= 0 {
-		return nil, errors.New("9th argument must be a non-empty string")
-	}
-	if len(args[9]) <= 0 {
-		return nil, errors.New("10th argument must be a non-empty string")
-	}
 	
-	FAA_formNumber := args[0] // FAA_formNumber or FAA_formNumberber
-	quantity := args[1]
-	FAA_formUrl := args[2]
-	fileHash:=args[3]
-	user := args[4]
-	itemType := args[5]
-	part_number := args[6]
-	total_approvedQty := args[7]
-	approvalDate	:= args[8]
-	authorization_number := args[9]
-	userType := "Tier-3"	
-	qty,err := strconv.Atoi(quantity)
-	if err != nil {
-		return nil, errors.New("Error while converting string 'quantity' to int ")
-	}
-	approvedQty,err := strconv.Atoi(total_approvedQty)
-	if err != nil {
-		return nil, errors.New("{\"Error\":\"Error while converting string 'approvedQty' to int \"}")
-	}
-	if(qty > approvedQty){
-		jsonResp := "Error: Quantity should be less than Total Approved Quantity"
-		return nil,errors.New(jsonResp)
-	}	
+	
+	proposal_id := args[0] // FAA_formNumber or FAA_formNumberber
+	region := args[1]
+	country := args[2]
+		
+	
 		
 	//build the Form json string manually
 	input := 	`{`+
-		`"FAA_formNumber": "` + FAA_formNumber + `" , `+
-		`"quantity": "` + quantity + `" , `+ 
-		`"FAA_formUrl": "` + FAA_formUrl + `" , `+ 
-		`"fileHash": "`+fileHash+ `" , `+ 
-		`"user": "` + user + `" , `+
-		`"itemType": "` + itemType + `" , `+
-		`"part_number": "` + part_number + `" , `+ 
-		`"total_approvedQty": "` + total_approvedQty + `" , `+ 
-		`"approvalDate": "` + approvalDate + `" , `+ 	
-		`"authorization_number": "` + authorization_number + `" , `+ 
-		`"userType": "` + userType + `"`+
+		`"proposal_id": "` + proposal_id + `" , `+
+		`"region": "` + region + `" , `+ 
+		`"country": "` + country + `"`+
 		`}`
 		fmt.Println("input: " + input)
 		fmt.Print("input in bytes array: ")
 		fmt.Println([]byte(input))
-	err = stub.PutState(FAA_formNumber, []byte(input))									//store Form with FAA_formNumber as key
+	err = stub.PutState(proposal_id, []byte(input))									//store Form with FAA_formNumber as key
 	if err != nil {
 		return nil, err
 	}
+	
+	/*
 	//get the Form index
 	Tier3FormIndexAsBytes, err := stub.GetState(Tier3FormIndexStr)
 	if err != nil {
@@ -210,4 +166,41 @@ func (t *manage_proposal) createForm_Tier3(stub shim.ChaincodeStubInterface, arg
 
 	fmt.Println("Tier-3 Form created successfully.")
 	return nil, nil
+	*/
+	
+	
+	
+	
+	proposal_id_FormIndexAsBytes, err := stub.GetState(approved_proposal_entry)
+	if err != nil {
+		return nil, errors.New("Failed to get proposal id  Form index")
+	}
+	var proposal_id_Index []string
+	fmt.Print("proposal_id_FormIndexAsBytes: ")
+	fmt.Println(proposal_id_FormIndexAsBytes)
+	
+	json.Unmarshal(proposal_id_FormIndexAsBytes, &proposal_id_FormIndex)							//un stringify it aka JSON.parse()
+	fmt.Print("proposal_id_FormIndex after unmarshal..before append: ")
+	fmt.Println(proposal_id_FormIndex)
+	//append
+	proposal_id_FormIndex = append(proposal_id_FormIndex, proposal_id)									//add Form transID to index list
+	fmt.Println("! Proposal  Form index after appending proposal id: ", proposal_id_FormIndex)
+	jsonAsBytes, _ := json.Marshal(proposal_id_FormIndex)
+	fmt.Print("jsonAsBytes: ")
+	fmt.Println(jsonAsBytes)
+	err = stub.PutState(approved_proposal_entry, jsonAsBytes)						//store name of Form
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Proposal Form created successfully.")
+	return nil, nil
+	
+	
+	
+	
+	
+	
+	
+	
 }
