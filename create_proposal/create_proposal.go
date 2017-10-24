@@ -102,7 +102,7 @@ func (t *ManageProposal) Invoke(stub shim.ChaincodeStubInterface, function strin
 }
 
 // ============================================================================================================================
-// Query - Our entry Formint for Queries
+// Query - Our entry for Queries
 // ============================================================================================================================
 func (t *ManageProposal) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("Query is running " + function)
@@ -138,7 +138,7 @@ func (t *ManageProposal) create_proposal_id(stub shim.ChaincodeStubInterface, ar
 	}
 	
 	
-	proposal_id := args[0] // FAA_formNumber or FAA_formNumberber
+	proposal_id := args[0]
 	region := args[1]
 	country := args[2]
 		
@@ -199,7 +199,7 @@ func (t *ManageProposal) get_all_proposal(stub shim.ChaincodeStubInterface, args
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting single space as an argument")
 	}
-	// fetching all tier-3 forms
+	// fetching all Proposal
 	proposal_id_FormIndexAsBytes, err := stub.GetState(approved_proposal_entry)
 	if err != nil {
 		return nil, errors.New("Failed to get all Proposals")
@@ -209,7 +209,7 @@ func (t *ManageProposal) get_all_proposal(stub shim.ChaincodeStubInterface, args
 	json.Unmarshal(proposal_id_FormIndexAsBytes, &proposal_id_FormIndex)								//un stringify it aka JSON.parse()
 	fmt.Print("proposal_id_FormIndex : ")
 	fmt.Println(proposal_id_FormIndex)
-	// Proposal data
+	// Proposal Data
 	jsonProposalResp = "{"
 	for i,val := range proposal_id_FormIndex{
 		fmt.Println(strconv.Itoa(i) + " - looking at " + val + " for all Proposal")
